@@ -4,7 +4,7 @@ gpart add -t freebsd-ufs -a 1M ada1
 
 newfs -U /dev/ada1p1
 mkdir /newdisk
-mount /newdisk
+sudo mount /dev/ada1p1 /newdisk
 
 gpart show ada1
 
