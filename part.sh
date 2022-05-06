@@ -25,11 +25,11 @@ mkdir /newdisk/dir3/dir3.1
 mkdir /newdisk/dir3/dir3.2
 mkdir /newdisk/dir3/dir3.3
 
-touch file1
-echo "foo" >> file1
-touch dead
-echo "squirrel-pancake" >> dead
-touch beef
-echo "medium-rare" >> beef
-touch big-file
-for i in `seq 1 1000`; do echo "fuck Microsoft " >> big-file; done
+touch /newdisk/file1
+echo "foo" >> /newdisk/file1
+touch /newdisk/dead
+echo "squirrel-pancake" >> /newdisk/dead
+touch /newdisk/beef
+echo "medium-rare" >> /newdisk/beef
+touch /newdisk/big-file
+for i in `seq 1 1000`; do echo "fuck Microsoft " >> /newdisk/big-file; done
