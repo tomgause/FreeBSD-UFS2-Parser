@@ -1,0 +1,14 @@
+{
+  "files.associations": {
+    "string_view": "c",
+    "regex": "c",
+    "array": "c",
+    "bitset": "c",
+    "initializer_list": "c",
+    "ranges": "c",
+    "span": "c",
+    "utility": "c",
+    "valarray": "c",
+    "charconv": "c"
+  }
+}

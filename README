@@ -15,4 +15,12 @@ Useful Functions:
 
   sudo dd if=/dev/zero of=/dev/ada1 bs=32K
 
+Macros Notes:
+
+  This gives us the fragment at the beginning of the cylinder group.
+  define	cgbase(fs, c)	(((ufs2_daddr_t)(fs)->fs_fpg) * (c))
+
+  Where within the cylinder group do the inodes start?
+  define	cgimin(fs, c)	(cgstart(fs, c) + (fs)->fs_iblkno)	/* inode blk */
+
 Resources Used:

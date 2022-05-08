@@ -32,4 +32,4 @@ echo "squirrel-pancake" >> /newdisk/dead
 touch /newdisk/beef
 echo "medium-rare" >> /newdisk/beef
 touch /newdisk/big-file
-for i in `seq 1 1000`; do echo "fuck Microsoft " >> /newdisk/big-file; done
+echo "The narrative of Moby-Dick begins with the famous brief sentence, “Call me Ishmael.” Ishmael, a sailor, describes a typical scene in New York City, with large groups of men gathering on their days off to contemplate the ocean and dream of a life at sea. He explains that he himself went to sea because, like these men, he was feeling a “damp, drizzly November in [his] soul” and craved adventure. Shunning anything too “respectable” (or expensive), he always ships as a common sailor rather than as a passenger." >> /newdisk/big-file
