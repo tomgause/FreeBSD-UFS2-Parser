@@ -11,4 +11,8 @@ Useful Functions:
   git commit -am “message here“
   git push origin main
 
+  geom disk list
+
+  sudo dd if=/dev/zero of=/dev/ada1 bs=32K
+
 Resources Used:
