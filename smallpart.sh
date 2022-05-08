@@ -1,6 +1,6 @@
 #!/bin/sh
 gpart create -s GPT ada2
-gpart add -t freebsd-ufs -a 1M ada1
+gpart add -t freebsd-ufs -a 1M ada2
 
 newfs -U /dev/ada2p1
 mkdir /newdisk
