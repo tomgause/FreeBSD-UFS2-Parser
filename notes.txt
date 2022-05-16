@@ -1,0 +1,28 @@
+/*
+ * Macros for handling inode numbers:
+ *     inode number to filesystem block offset.
+ *     inode number to cylinder group number.
+ *     inode number to filesystem block address.
+ */
+
+Translates an INODE NUMBER to CYLINDER GROUP
+divides INODE by INODES per CYLINDER GROUP
+#define	ino_to_cg(fs, x)	(((ino_t)(x)) / (fs)->fs_ipg)
+
+Takes INODE and returns FILESYSTEM BLOCK ADDRESS in fragments.
+First, we get CGIMIN:
+  #define	cgimin(fs, c)	(cgstart(fs, c) + (fs)->fs_iblkno)	/* inode blk */
+  This is the START of the cylinder group + offset of inode-blocks.
+  CGSTART is BLOCKS PER CYLINDER GROUP * FS_FRAG * CYL #.
+  So it's the number of fragments to the start of the cylinder group.
+Next, we add blkstofrags, which calculates blks * fs_frag, or frags in block fs.
+  The inputs of blkstofrags is fs and inode % inodes per group / inodes per block.
+address of inode-block in cylinder group + fragments to the inode
+#define	ino_to_fsba(fs, x)						\
+	((ufs2_daddr_t)(cgimin(fs, ino_to_cg(fs, (ino_t)(x))) +		\
+	    (blkstofrags((fs), ((((ino_t)(x)) % (fs)->fs_ipg) / INOPB(fs))))))
+
+
+#define	cgimin(fs, c)	(cgstart(fs, c) + (fs)->fs_iblkno)	/* inode blk */
+
+#define	ino_to_fsbo(fs, x)	(((ino_t)(x)) % INOPB(fs))

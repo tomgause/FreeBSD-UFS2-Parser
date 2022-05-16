@@ -1,7 +1,6 @@
 // fs-find.c
-// created by Tom Gause
-// 5-9-2022
-// git pull; cc -o fs-find.o fs-find.c ; ./fs-find.o ../dump.out
+// created by Tom Gause and Will Wolf
+// 5-16-2022
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,23 +16,85 @@
 #include "/usr/src/sys/ufs/ufs/quota.h"
 #include "/usr/src/sys/ufs/ffs/fs.h"
 #include "/usr/src/sys/ufs/ufs/dinode.h"
-#include "/usr/src/sys/ufs/ufs/inode.h"
 #include "/usr/src/sys/ufs/ufs/dir.h"
+#include "/usr/src/sys/sys/param.h"
+
+int parse_dir( char * ptr, struct fs * sb, char * head, int tabs );
+int parse_ino( char * ptr, struct fs * sb, int ino, int tabs );
+
+
+int parse_dir( char * ptr, struct fs * sb, char * head, int tabs ) {
+  int max_size = DEV_BSIZE; //also DIRBLKSIZE, usually 512 bytes
+  int count = 0; //janky way of tracking distance in memory from head
+  struct direct *dir = (struct direct *)(head);
+
+  while ( count < max_size ) { //halt when reaching DIRBLKSIZE
+
+    //halts if record length is zero, i.e. no direct struct
+    if (dir->d_reclen == 0) {
+      return 0;
+    }
+
+    //only print directory name if not . or .. because they're ugly!
+    if (strcmp(dir->d_name,".")!=0 && strcmp(dir->d_name,"..")!=0) {
+        for (int i = 0; i < tabs; i++) { printf("  ");}
+        printf("%s\n", dir->d_name);
+    }
+
+    /*
+     * If the direct struct type is a directory, then we parse the inode
+     * of the direct struct to look for files (and directories) inside
+     * this directory. We don't recurse when the directory is . or ..,
+     * as that causes infinite loops.
+     */
+    if ((dir->d_type == 4)  &&
+        (strcmp(dir->d_name,".")!=0 && strcmp(dir->d_name,"..")!=0)) {
+      parse_ino(ptr, sb, dir->d_ino, tabs + 1);
+    }
+
+    //increment count by the length of record and assign next direct struct
+    count = count + dir->d_reclen; //record length
+    dir = (struct direct *)(head + count);
+  }
+  return 0;
+}
+
+int parse_ino( char * ptr, struct fs * sb, int ino, int tabs ) {
+  int block_offset;
+  int block_add;
+  int offset;
+  struct ufs2_dinode *inode;
+  long *di_db;
+
+  //ino block offset in filesystem in BLOCKS
+  block_offset = sizeof(struct ufs2_dinode) * ino_to_fsbo(sb, ino); 
+  //ino block add in filesystem in FRAGMENTS
+  block_add = 4096 * ino_to_fsba(sb, ino);
+
+  //get the offset to the inode "ino" and declare inode struct
+  offset = block_add + block_offset;
+  inode = (struct ufs2_dinode *)(ptr + offset);
+
+  /*
+   * Declare contents of di_db array. This is a lazy implementation, so I didn't
+   * account for directories larger than the fragment size.
+   * TODO: this.
+   */
+  di_db = inode->di_db;
+  parse_dir( ptr, sb, ptr + *di_db * sb->fs_fsize, tabs);
+
+  return 0;
+}
 
 
 
 int main( int argc, char *argv[] ){
-
   struct fs *super_block;
-  struct direct *head;
   struct stat st;
   int size;
   int img;
   void *ret;
-  int *ptr = NULL;
-  int block_offset = -1;
-  int block_add = -1;
-  int cylinder_group = -1;
+  char *ptr = NULL;
 
   // handle arguments
   if( argc == 2 ) {
@@ -54,7 +115,6 @@ int main( int argc, char *argv[] ){
 
   // get size of file
   stat(argv[1], &st);
-  
   if ((size = st.st_size) < 1) {
     perror("size");
     return 1;
@@ -69,66 +129,13 @@ int main( int argc, char *argv[] ){
     ptr = ret;
   }
   
-  // create the superblock with the offset
-  super_block = (struct fs *)(ptr + SBLOCK_UFS2/4);
+  //create the superblock using UFS2 offset
+  super_block = (struct fs *)(ptr + SBLOCK_UFS2);
+  printf("\nname mounted on: %s\n", super_block->fs_fsmnt);
 
+  //recurse!
+  parse_ino(ptr, super_block, UFS_ROOTINO, 0);
 
-  printf("\nname mounted on: %s\n\n", super_block->fs_fsmnt);
-  
-  printf("[fs->fs_firstfield]	Historic: %x\n", super_block->fs_firstfield);
-  printf("[fs->fs_unused_1]	Unused: %x\n", super_block->fs_unused_1);
-  printf("[fs->fs_sblkno]	Super-block: %x\n", super_block->fs_sblkno);
-  printf("[fs->fs_cblkno]	Cylinder group block: %d\n", super_block->fs_cblkno);
-  printf("[fs->fs_iblkno]	Inode Blocks: %x\n", super_block->fs_iblkno);
-  printf("[fs->fs_dblkno]	Data Blocks: %d\n", super_block->fs_dblkno);
-  printf("[fs->fs_ipg] Inodes per group: %u\n", super_block->fs_ipg);
-  printf("[fs->fs_bsize] FS Basic Block Size: %u\n", super_block->fs_bsize);
-  printf("[fs->fs_fsize] FS Fragment Size: %u\n", super_block->fs_fsize);
-  printf("[fs->fs_old_size] Number of blocks: %d\n", super_block->fs_old_size);
-  printf("[fs->fs_ncg] Number of cylinder groups: %d\n", super_block->fs_ncg);
-  // let's use some macros from fs.h
-
-  // cylinder gorup nmumber with ino
-  cylinder_group = ino_to_cg(super_block, UFS_ROOTINO);
-
-  printf("cylinder group for root ino: %d\n", cylinder_group);
-
-  // ino block offset in filesystem
-  block_offset = ino_to_fsbo(super_block, UFS_ROOTINO); 
-
-  // ino block add in filesystem
-  block_add = ino_to_fsba(super_block, UFS_ROOTINO);
-
-  // inode block address in cylinder group
-  int ino_cg_offset = cgimin(super_block, cylinder_group);
-
-  // filesystem block numbers into disk block addresses
-  int db_add = dbtofsb(super_block, block_add);
-
-  printf("inode block offset in filesystem: %d\n", block_offset);
-  printf("inode block address in filesystem: %d \n", block_add);
-  printf("cylinder group inode block address: %d \n", ino_cg_offset);
-  printf("db_add: %d \n", db_add);
-
-  int cgstart = cgstart(super_block, cylinder_group);
-  // printf("cgstart: %d\n", cgstart);
-
-  // BASE: 65536
-  // NEED INODE ADD: 294912
-  // 294912 - 65536 = 229376
-  int offset = ino_cg_offset * (super_block->fs_fsize) + block_offset * (super_block->fs_bsize);
-  printf("Offset calc: %d\n", offset);
-  head = (struct direct *)(ptr + (SBLOCK_UFS2 + ino_cg_offset* (super_block->fs_fsize) + block_offset * (super_block->fs_bsize))/4);
-
-
-  printf("dir ino: %d\n", head->d_ino);
-
-
- 
   return 0;
 }
-
-
-
-
 

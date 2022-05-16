@@ -9,6 +9,9 @@
     "span": "c",
     "utility": "c",
     "valarray": "c",
-    "charconv": "c"
+    "charconv": "c",
+    "scoped_allocator": "c",
+    "chrono": "c",
+    "algorithm": "c"
   }
 }
