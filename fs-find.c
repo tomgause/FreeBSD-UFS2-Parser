@@ -69,7 +69,7 @@ int parse_ino( char * ptr, struct fs * sb, int ino, int tabs ) {
   //ino block offset in filesystem in BLOCKS
   block_offset = sizeof(struct ufs2_dinode) * ino_to_fsbo(sb, ino); 
   //ino block add in filesystem in FRAGMENTS
-  block_add = 4096 * ino_to_fsba(sb, ino);
+  block_add = sb->fs_fsize * ino_to_fsba(sb, ino);
 
   //get the offset to the inode "ino" and declare inode struct
   offset = block_add + block_offset;
