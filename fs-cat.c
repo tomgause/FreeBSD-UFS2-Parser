@@ -96,11 +96,11 @@ int parse_ino( char * ptr, char * path, struct fs * sb, int ino, int tabs, int i
      //If it is a file, we iterate through di_db address entries
      int i = 0;
      while(di_db[i]!=0){
-     //Nowe we iterate through characters inside of each entry and print them!
-	   char * content = (char *)(di_db[i]*4096+ptr);
-  	 while(*content != '\0'){
-        printf("%c", *content);
-  	 content++;
+      //Nowe we iterate through characters inside of each entry and print them!
+      char * content = (char *)(di_db[i]*4096+ptr);
+      while(*content != '\0'){
+          printf("%c", *content);
+      content++;
   	}
   	i++;
        }
