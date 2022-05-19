@@ -75,7 +75,7 @@ int parse_ino( char * ptr, struct fs * sb, int ino, int tabs ) {
   offset = block_add + block_offset;
   inode = (struct ufs2_dinode *)(ptr + offset);
 
-  printf("filetype: %d\n", inode->di_mode);
+  printf("filetype: %u\n", inode->di_mode);
 
   /*
    * Declare contents of di_db array. This is a lazy implementation, so I didn't
